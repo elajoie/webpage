@@ -1,0 +1,76 @@
+{{ header }}
+<article>
+    <header>
+        <timeblog datetime="2015-04-01" pubdate><span>Apr</span> 1</timeblog>
+        <h1><a href="#" title="Link to this post" rel="bookmark">SP OpenStack & NFV at MWC 2015</a></h1>
+    </header>
+    <p>Lets get the liability out of the way so I don't get in trouble with my employer. This blog is completely my own
+    opinion.</p>
+    <section>
+        <header>
+            <h1>Initial Thoughts</h1>
+        </header>
+        <p>With HP's Helion OpenStack and Carrier Grade OpenStack solutions shared at Mobile World Congress this year,
+	one could think customized and proprietary solutions are the way of the future for service providers.
+	</p>
+	<p>
+	Far from the truth, both community and proprietary solutions need to contribute to the same software community
+	which brings us to my April post.
+	What sets different OpenStack distributions apart and how does this look to both business owners and technologists.
+	</p>
+    </section>
+    <section>
+        <header>
+            <h1>Vendor Lock-In vs. Enhancements</h1>
+        </header>
+	<p>
+	    <i>
+		Long post short, we will need to use OpenStack provider enhancements outside the community while
+		features continues to mature. This is where <a href="http://www8.hp.com/us/en/cloud/hphelion-openstack-overview.html">
+		    HP Helion OpenStack Carrier Grade
+		</a> comes into play.
+	    </i>
+	</p>
+	<p>
+	    If we think of all service provider vendors today and their appliance based business, we can see a majority
+	    make their revenue off hardware.
+	</p>
+	<p>
+	    When a SP CTO looks at this model and tries to map their business plans to a virtualized or
+	    OpenStack world, they may have mixed feelings.  An open platform with minimal vendor locking is key to an
+	    OpenStack adoption. On another hand they could see the hardware cost reduced (theoretically)
+	    and an increase in licensing (this is where those vendors will recoup their lost HW profit).
+	</p>
+	<p>
+	    From a technology perspective, OpenStack is an event horizon for IT departments, helping to bring their
+	    teams to the next frontier.
+	</p>
+	<p>
+	    Now lets think of our first adventure into the land of virtualizing our carrier grade appliances and solutions.
+	    If we take mobility as our first example, we need to first find out what these vendors offer and their NFV
+	    requirements.  Once we have a general understanding (SR-IOV, NUMA, Huge Pages, DPDK) of all the features
+	    we then look at our OpenStack options.  Which of these features are available in OpenStack and which need to be
+	    developed by an OpenStack provider.
+	</p>
+	<p>
+	    At this point, our path to OpenStack adoption veers towards vendor lock-in for the purpose of enhancing
+	    features beyond current community efforts. Ideally we would want OpenStack providers to upstream their
+	    customizations but the community may not always accept these changes.
+	</p>
+	<p>
+	    Lets take this one step further and imagine we have our custom OpenStack environment with all the features
+	    needed. Our licensing model may cost more but we have what we need to do business and guarantee things work.
+	</p>
+	<p>
+	    Now say within the first year of our cloud being operational, the community stabilizes all the original
+	    features we needed.  What now?  This is where our OpenStack provider like HP needs to provide a seamless upgrade path
+	    for the cloud to reduce our customized software and redeploy community base OpenStack onto existing hardware.
+	</p>
+	<p>
+	    This model in my opinion is the best strategy to accelerate time to market as well as reducing CAPEX related
+	    to normal hardware/software refresh.
+	</p>
+
+    </section>
+</article>
+{{ footer }}

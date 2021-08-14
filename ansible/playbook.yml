@@ -1,0 +1,18 @@
+---
+- hosts: 127.0.0.1
+  become: yes
+  vars_files: vars.yml
+  tasks:
+    - name: Loop temlpates to make all the pages
+      template:
+        src: "{{ item }}.j2"
+        dest: "{{ folder }}/{{ item }}"
+      with_items:
+        - aboutme.html
+        - contact.html
+        - epcipv6.html
+        - epcqos.html
+        - index.html
+        - nfv-blog.html
+        - nodeselection.html
+...

@@ -1,28 +1,44 @@
 ---
 pages:
-  basic:
-    - name: "bastion"
-      ipaddr: "{{ nodes_subnet24 | default ('192.168.126')}}.7"
-      netmask: "{{ nodes_mask24 | default ('255.255.255')}}.0"
-      gw: "{{ nodes_subnet24 | default ('192.168.126')}}.254"
-      macaddr: "52:54:00:86:bf:08"
-      disk: "vda"
-      boot: "uefi"
-      nic_pxe: enp7s0
-      vm_vcpu: 4
-      vm_memory_size: 16384
-      vm_memory_unit: 'MiB'
-      vm_root_disk_size: '120G'
-      vm_network: default
-  blog:
-    - name: "bootstrap"
-      ipaddr: "{{ nodes_subnet24 | default ('192.168.126')}}.10"
-      netmask: "{{ nodes_mask24 | default ('255.255.255')}}.0"
-      gw: "{{ nodes_subnet24 | default ('192.168.126')}}.254"
-      macaddr: "52:54:00:d0:6f:16"
-      disk: "vda"
-      boot: "uefi"
-      nic_pxe: enp1s0
+  articles:
+    - name: "nodeselection"
+      longname: "3GPP EPC Node Selection"
+      details: |
+        This DNS HOWTO assumes you have Googled the basic setup of your BIND 
+        service and master/slave deployment. We will only focus on the 3GPP aspect 
+        of the zone file and how you can use it with an ASR5000. The 
+        <a href="http://www.3gpp.org/ftp/Specs/html-info/29303.htm" rel="nofollow">
+        3GPP specification 29.303</a> Annex A4.3(S10) Annex 4.11(S11 and S5), 
+        <a href="http://www.3gpp.org/ftp/Specs/html-info/23003.htm" rel="nofollow">
+        23.003</a>, <a href="http://www.ietf.org/rfc/rfc2915.txt" rel="nofollow">
+        RFC 2915</a>, and <a href="http://www.ietf.org/rfc/rfc3958.txt" rel="nofollow">
+        RFC 3958(2.2.3)</a> are the main references used in this HOWTO.
+      date: "APR 2013"
+      longdate: "2013-04-21"
+    - name: "epcqos"
+      longname: "3GPP EPC QOS Design"
+      details: |
+        This HOWTO assumes you know Cisco IOS QOS and can implement your preferred enforcement 
+        on IP networks between EPS elements. Material in this HOWTO was gathered from 3GPP 
+        <a href="http://www.etsi.org/deliver/etsi_ts/123400_123499/123401/10.08.00_60/ts_123401v100800p.pdf" target="_blank">
+        TS 23.401 section 4.7</a> and Cisco LTE CLI guide. For a general understanding let's take 
+        a look at DCSP marking values in the diagram below. Keep in mind that StarOS supports AF, BE, and EF markings.
+      date: "APR 2013"
+      longdate: "2013-04-22"
+    - name: "epcipv6"
+      longname: "3GPP EPC IPv6 Design"
+      details: |
+        This DNS HOWTO assumes you have Googled the basic setup of your BIND 
+        service and master/slave deployment. We will only focus on the 3GPP aspect 
+        of the zone file and how you can use it with an ASR5000. The 
+        <a href="http://www.3gpp.org/ftp/Specs/html-info/29303.htm" rel="nofollow">
+        3GPP specification 29.303</a> Annex A4.3(S10) Annex 4.11(S11 and S5), 
+        <a href="http://www.3gpp.org/ftp/Specs/html-info/23003.htm" rel="nofollow">
+        23.003</a>, <a href="http://www.ietf.org/rfc/rfc2915.txt" rel="nofollow">
+        RFC 2915</a>, and <a href="http://www.ietf.org/rfc/rfc3958.txt" rel="nofollow">
+        RFC 3958(2.2.3)</a> are the main references used in this HOWTO.
+      date: "APR 2013"
+      longdate: "2013-04-22"
 
 folder: /home/elajoie/webpage/
 

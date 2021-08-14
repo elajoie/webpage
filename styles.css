@@ -1,0 +1,170 @@
+ * {
+    font-family: Lucida Sans, Arial, Helvetica, sans-serif, Courier, monospace;
+}
+
+body {
+    width: 840px; margin: 0px auto;
+}
+
+header h1 {
+    font-size: 36px; margin: 0px;
+}
+
+header h2 {
+    font-size: 18px; margin: 0px; color: #888;
+    font-style: italic;
+}
+
+nav ul {
+    list-style: none; padding: 0px; display: block;
+    clear: right; background-color: #666;
+    padding-left: 4px; height: 24px;
+}
+
+nav ul li {
+    display: inline; padding: 0px 20px 5px 10px;
+    height: 24px; border-right: 1px solid #ccc;
+}
+
+nav ul li a {
+    color: #D3F0D3; text-decoration: none;
+    font-size: 13px; font-weight: bold;
+}
+
+nav ul li a:hover {
+    color: #fff;
+}
+
+table, td {
+	font:15px Courier,monospace;
+	border: 1px solid black;
+	padding:5px;
+	border-collapse:collapse;
+}
+
+th {
+	background-color:green;
+	color:white;
+	font:15px Courier,monospace;
+	border: 1px solid black;
+	padding:5px;
+}
+
+img {
+	max-width:100%; max-height:auto;
+}
+
+article > header time {
+    font-size: 14px; display: block; width: 42px;
+    padding: 2px; text-align: center; background-color: green;
+    color: #fff; font-weight: bold; -moz-border-radius: 6px;
+    -webkit-border-radius: 6px; border-radius: 6px; float: left;
+    margin-bottom: 10px;
+}
+
+article > header time span {
+    font-size: 14px; font-weight: normal;
+    text-transform: uppercase;
+}
+
+article > header timeblog {
+    font-size: 14px; display: block; width: 42px;
+    padding: 2px; text-align: center; background-color: blue;
+    color: #fff; font-weight: bold; -moz-border-radius: 6px;
+    -webkit-border-radius: 6px; border-radius: 6px; float: left;
+    margin-bottom: 10px;
+}
+
+article > header timeblog span {
+    font-size: 14px; font-weight: normal;
+    text-transform: uppercase;
+}
+
+article > header h1 {
+    font-size: 20px; float: left;
+    margin-left: 14px;
+}
+
+article > header h1 a {
+    color: black;
+}
+
+article > section header h1 {
+    font-size: 16px;
+}
+
+article > section div {
+    border: 1px solid #888;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 5px;    
+    -moz-box-shadow: 5px 5px 2px #888;
+    -webkit-box-shadow: 5px 5px 2px #888;
+    box-shadow: 5px 5px 2px #888;
+    background-color: #eee;
+	padding: 5px;
+	font:14px Courier,monospace;
+	white-space:pre-wrap;
+	width: opx auto; margin: 0px auto;
+}
+
+article > section code {
+	font:15px Courier,monospace;
+}
+
+article p {
+    clear: both;
+}
+
+footer p {
+    text-align: center; font-size: 12px;
+    color: #888; margin-top: 24px;
+}
+
+#Options for video
+article > section video {
+    width: 480px; height: 200px;
+}
+article > section div.no-html5-video,
+article > section div#no-canvas {
+    width: 480px; height: 40px; border: 1px solid #993333;
+    text-align: center; color: #993333; font-size: 13px;
+    font-style: italic; background-color: #F7E9E9;
+}
+
+#Options for froms
+article > section form {
+    border: 1px solid #888;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;    
+    -moz-box-shadow: 10px 10px 5px #888;
+    -webkit-box-shadow: 10px 10px 5px #888;
+    box-shadow: 10px 10px 5px #888;
+    background-color: #eee;
+    padding: 10px; margin-bottom: 30px;
+}
+
+article > section label {
+    font-weight: bold; font-size: 13px;
+}
+
+article > section input {
+    margin-bottom: 3px; font-size: 13px;
+}
+
+#Options for canvas
+article > section div#no-canvas {
+    display: none;
+}
+
+canvas {
+    border: 1px solid #888;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;    
+    -moz-box-shadow: 10px 10px 5px #888;
+    -webkit-box-shadow: 10px 10px 5px #888;
+    box-shadow: 10px 10px 5px #888;
+    background-color: #eee;
+}

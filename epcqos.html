@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="keywords" content="epc, EPC, LTE, lte, dns, DNS, google, google.com, eric, lajoie, eric lajoie, IPv6, design node, selection, qos, 4g">
+    <meta name="description" content="Eric Lajoie's HOWTO guides to EPC LTE QOS">
+    <meta name="author" content="Eric Lajoie">		
+    <title>Eric's Tech Notes - 3GPP QOS</title>
+    <link rel="stylesheet" href="styles.css" />	
+</head>
+<body>
+	
+<header>
+    <hgroup>
+        <h1>Eric's Tech Notes</h1>
+        <h2>HOWTO guides to sometimes complicated tasks</h2>
+    </hgroup>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="./">Home</a></li>
+        <li><a href="./aboutme.html">About Me</a></li>
+        <li><a href="./contact.html">Contact Me</a></li>
+    </ul>
+</nav>
+
+<article>
+    <header>
+        <time datetime="2013-04-22" pubdate>
+            <span>Apr</span> 22
+        </time>
+        <h1>
+            <a href="#" title="Link to this post" 
+rel="bookmark">3GPP EPC QOS Design</a>
+        </h1>
+    </header>
+    <p>This HOWTO assumes you know Cisco IOS QOS and can implement your preferred enforcement 
+	on IP networks between EPS elements. Material in this HOWTO was gathered from 3GPP 
+	<a href="http://www.etsi.org/deliver/etsi_ts/123400_123499/123401/10.08.00_60/ts_123401v100800p.pdf" target="_blank">
+	TS 23.401 section 4.7</a> and Cisco LTE CLI guide. For a general understanding let's take 
+	a look at DCSP marking values in the diagram below. Keep in mind that StarOS supports AF, BE, and EF markings.</p>
+	
+		<img src="./1.jpg" alt="DSCP Mapping">
+
+		<table>
+		<caption>QCI to DSCP Mapping</caption>
+		<thead>	
+		<tr>
+		<th>QCI</th><th>Priority</th><th>Packet Delay</th><th>Packet Loss</th><th>DSCP/Dec/HEX</th><th>Service Examples</th><th>UMTS Class</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr>
+		<td>1</td><td>2</td><td>100ms</td><td>10^-2</td><td>EF/46/2E</td><td>Conversational Voice (GBR)</td><td>Conversational</td>
+		</tr>
+		<tr>
+		<td>2</td><td>4</td><td>150ms</td><td>10^-3</td><td>EF/46/2E</td><td>Conversational Video (GBR)</td><td>Conversational</td>
+		</tr>
+		<tr>
+		<td>3</td><td>3</td><td>50ms</td><td>10^-3</td><td>EF/46/2E</td><td>Real Time Gaming (GBR)</td><td>Conversational</td>
+		</tr>
+		<tr>
+		<td>4</td><td>5</td><td>300ms</td><td>10^-6</td><td>AF41/34/22</td><td>MM Streaming (GBR)</td><td>Streaming</td>
+		</tr>
+		<tr>
+		<td>5</td><td>1</td><td>100ms</td><td>10^-6</td><td>AF31/26/1A</td><td>IMS Signaling</td><td>Streaming<br>Interactive/1</td>
+		</tr>
+		<tr>
+		<td>6</td><td>6</td><td>300ms</td><td>10^-6</td><td>AF31/26/1A</td><td>TCP, ftp, apps High priority</td><td>Interactive/1</td>
+		</tr>
+		<tr>
+		<td>7</td><td>7</td><td>100ms</td><td>10^-3</td><td>AF21/18/12</td><td>VoIP, video, apps non-GBR</td><td>Interactive/2</td>
+		</tr>
+		<tr>
+		<td>8</td><td>8</td><td>300ms</td><td>10^-6</td><td>AF11/10/0A</td><td>TCP, ftp, apps Reg. Priority</td><td>Interactive/3</td>
+		</tr>
+		<tr>
+		<td>9</td><td>9</td><td>300ms</td><td>10^-6</td><td>BE/0/00</td><td>TCP, ftp, apps Low Priority</td><td>Background</td>
+		</tr>
+		</tbody>
+		</table><br>
+
+    <section>
+        <header>
+            <h1>Control Plane QOS</h1>
+        </header>
+	<p>	Control plane QOS if very simple compared to the user plane marking and enforcement. Below we 
+	have a diagram showing the control plane in purple with both SCTP and GTP encapsulations. In all 
+	our control plane examples we use ef marking but this is just for example and your customer may 
+	choose differently. There is only marking on the control plane and if you need policing or shaping 
+	you will have to use an external node. It's assumed the control plane traffic would never be enforced 
+	via policing or shaping as this would degrade the users experience.</p>
+	<img src="./2.png" alt="Basic EPC">
+	<p>The configuration needed to do control plane marking is provided below for MME, SGW, and PGW.  
+	Please not the eNodeB will also need to support prioritization over RAN based on DSCP for control 
+	plane and QCI for user plane plus its traffic towards MME and SGW. We also have marking enabled 
+	for diameter towards HSS so you might want to check if your HSS vendor supports marking in the 
+	return path.</p>
+	<div>
+	MME-S1-MME:
+		mme-service MME-SVC
+		  s1-mme ip qos-dscp ef
+	MME-S11:
+		egtp-service MME-EGTP-SVC
+		  gtpc ip qos-dscp ef
+		  interface-type interface-mme
+	MME-S6a:
+		diameter endpoint HSS
+		  dscp ef
+	SGW-S11:
+		egtp-service SGW-EGTP-S11-SVC
+		  gtpc ip qos-dscp ef
+		  interface-type interface-sgw-ingress
+	SGW-S5:
+		egtp-service SGW-EGTP-S5-SVC
+		  gtpc ip qos-dscp ef
+		  interface-type interface-sgw-egress
+	PGW-S5:
+		egtp-service PGW-EGTP-S5-SVC
+		  gtpc ip qos-dscp ef
+		  interface-type interface-pgw-ingress
+		  </div><br>
+	</section>
+	
+	<section>
+	<header>
+		<h1>User Plane QOS</h1>
+	</header>
+	<p>For user place we have marking and enforcement. First we have to understand all the 
+	variable in play and how they apply to each APN/UE. The items listed below will be cover 
+	high-level details with respect to each QOS attribute and how they interact with each other:</p>
+	<ol>
+    <li><b>DSCP Marking</b><br>DSCP marking is show in first section via table.</li>
+    <br><li><b>UE-AMBR</b> (per subscriber)<br>UE-AMBR is initially/optionally provided by HSS and is included in ULA in subscriber data. This value is the maximum bitrate (in bits per second) that all bearer used by a subscriber can utilize. It's used by UE and PGW to set maximum possible UL and DL date speeds and policing per subscriber. UE-AMBR will be lowest of either pre-configured UE-AMBR via HSS or Sum of all ANP-AMBRs for that subscriber.</li>
+    <br><li><b>APN-AMBR</b> (per subscriber)<br>APN-AMBR is initially/optionally provided by HSS and is included in ULA in apn context data(potentially different for each context/apn). This value is the maximum bitrate (in bits per second) that all PDNs combined per APN per subscriber. It's used by UE and PGW to set UL and DL date speeds and policing for all APNs combined per UE. You can only have UE-AMBR on Non-GBR bearer. Note that APN-AMBRs when added up between all active APNs cannot exceed UE-AMBR.</li>
+    <br><li><b>QCI</b><br>QCI or QoS Class Identifier is a scalar that is used as a reference to access node-specific parameters that control bearer level packet forwarding treatment (e.g. scheduling weights, admission thresholds, queue management thresholds, link layer protocol configuration, etc.), and that have been pre-configured by the operator owning the access node (e.g. eNodeB). A one-tone(single bucket) mapping of standardized QCI values to standardized characteristics is captured in TS 23.203</li>
+    <br><li><b>GBR</b><br>The GBR denotes the bit rate that can be expected to be provided by a GBR bearer. The MBR limits the bit rate that can be expected to be provided by a GBR bearer (e.g. excess traffic may get discarded by a rate policing function).</li>
+    <br><li><b>MBR</b><br>The MBR for a GBR bearer is equal to the GBR in current 3GPP release. Support for "MBR > GBR" bearers may be introduced in a future Release.</li>
+    <br><li><b>Non-GBR</b><br>Non GBR bearers will use a combination of APN-AMBR and UE-AMBR.</li>
+    <br><li><b>ARP</b><br>Priority will determine which bearers will be provisioned during contention for resources primarily on EUTRAN. Lower numerical value will have better priority. (At eNodeB and PGW) Once successfully established, a bearer's ARP shall not have any impact on the bearer level packet forwarding treatment (e.g. scheduling and rate control). Such packet forwarding treatment should be solely determined by the other EPS bearer QoS parameters: QCI, GBR and MBR, and by the AMBR parameters. The ARP is not included within the EPS QoS Profile sent to the UE.</li>
+    <br><li><b>ARP Pre-Emption Capability</b><br>This flag determines whether a bearer will be allowed to prioritize itself over another bearer with lower priority along with vulnerability flag set. (At eNodeB)</li>
+    <br><li><b>ARP Pre-Emption Vulnerability</b><br>This flag specifies if bearer can be candidate to remove for higher priority bearers which have Pre-Emption Capabilities set. (At eNodeB)</li>
+	</ol><br>
+	
+	<b>Notes:</b>
+	<ul>
+	<li>When we setup a new dedicated bearer (TFT with sub SDFs) and it's GBR, both AMBRs will have zero effect on this as GBR is independent of AMBRs.</li>
+    <li>UE-AMBR is enforced in uplink and downlink by eNodeB/UE plus PGW in downlink.</li>
+    <li>APN-AMBR is enforced in uplink by PGW and by eNodeB/UE plus PGW in downlink.</li>
+    <li>PGW uses QCI+ARP for bearer binding. PGW gets PCC rules from PCRF, and PGW than binds the rule to a bearer which matches the rules QCI and ARP and the bearer is updated. If there is no such bearer, a new bearer is created.</li>
+    <li>eNodeB will only delete GBR bearer via pre-emption</li>
+    <li>UE can’t send requested MBR to PGW in today’s EPC cores when it's a UE initiated modify/create bearer. This has not been accepted in 3GPP yet.</li>
+	</ul><br>
+	
+	</section>	
+	
+	<section>
+        <header>
+            <h1>User Plane QOS</h1>
+        </header>
+	<p>The section covers SGi QCI Mapping Plus SGi/S5 APN-AMBR Rate Limiting. The APN will first need to 
+	map QCI to DSCP values so the raw user packets are marks as they leave SGi. Once the mapping is 
+	done we can add policing APN-AMBR which implies non-BGR bearers.</p>
+	
+	<div>
+apn ipv4v6.com
+ ip qos-dscp qci 1 ef qci 2 ef qci 3 ef qci 4 af41 qci 5 af31 qci 6 af31 qci 7 af21 qci 8 af11 qci 9 be
+ apn-ambr rate-limit direction downlink burst-size auto-readjust violate-action lower-ip-precedence
+ apn-ambr rate-limit direction uplink burst-size auto-readjust violate-action lower-ip-precedence
+
+Options:
+violate-action
+ drop                 - drop the packet
+ lower-ip-precedence  - transmit the packet after lowering the ip-precedence
+                       (increaseing the DSCP drop-precedence) <- sets DSCP to 0x00 or BE
+ transmit             - transmit the packet
+	</div><br>
+	</section>
+	
+	<section>
+        <header>
+            <h1>SGW Policing</h1>
+        </header>
+	<p>In this section we cover S1-U & S5 Rate Limiting for Both GBR & Non-GBR. SGW based 
+	rate limiting for non-GBR & GBR bearers is configurable in SGW as shown below. 
+	This is a two bucket three color design of policing.</p>
+	
+	<div>
+sgw-service SGW-SVC
+  associate subscriber-map SM1
+
+lte-policy
+  subscriber-map SM1
+    precedence 1024 match-criteria all operator-policy-name OP1
+
+operator-policy name OP1
+  apn default-apn-profile AP1
+
+apn-profile AP1
+  qos rate-limit direction
+	downlink       - apply the QoS treatment in the downlink direction	
+	burst-size     - Burst size in bytes
+	exceed-action  - Action to be taken on packets that exceed the committed-rate but not violate.
+	gbr-qci        - configure traffic policing for gbr bearers
+	non-gbr-qci    - configure traffic policing for non gbr bearers
+	violate-action - Action to be taken on packets that exceed the committed-rate and peak-rate.
+	uplink         - apply the QoS treatment in the uplink direction	
+	burst-size     - Burst size in bytes
+	exceed-action  - Action to be taken on packets that exceed the committed-rate but not violate.
+	gbr-qci        - configure traffic policing for gbr bearers
+	non-gbr-qci    - configure traffic policing for non gbr bearers
+	violate-action - Action to be taken on packets that exceed the committed-rate and peak-rate. 
+  </div><br>
+	</section>
+	
+	<section>
+        <header>
+            <h1>SGW & PGW Marking</h1>
+        </header>
+	<p>This section covers S1-U & S5 QCI Mapping. The GTP user plane tunnel between eNodeB and 
+	PGW now needs to have QCI to DSCP, Delay, Drop Threshold and policing interval set. This 
+	profile needs to be applied to both SGW and PGW.</p>
+	
+	<div>
+pgw-service PGW-SVC
+  associate qci-qos-mapping QCI-QOS-MAP
+
+sgw-service SGW-SVC
+  associate qci-qos-mapping QCI-QOS-MAP
+
+qci-qos-mapping QCI-QOS-MAP
+qci 1 gbr traffic-policing interval 100 max-packet-delay 100 max-error-rate 2 uplink user-datagram 
+dscp-marking 0x2e encaps-header copy-inner downlink user-datagram dscp-marking 0x2e encaps-header copy-inner
+qci 2 gbr traffic-policing interval 100 max-packet-delay 150 max-error-rate 3 uplink user-datagram 
+dscp-marking 0x2e encaps-header copy-inner downlink user-datagram dscp-marking 0x2e encaps-header copy-inner
+qci 3 gbr traffic-policing interval 100 max-packet-delay 50 max-error-rate 3 uplink user-datagram 
+dscp-marking 0x2e encaps-header copy-inner downlink user-datagram dscp-marking 0x2e encaps-header copy-inner
+qci 4 gbr traffic-policing interval 100 max-packet-delay 300 max-error-rate 6 uplink user-datagram 
+dscp-marking 0x22 encaps-header copy-inner downlink user-datagram dscp-marking 0x22 encaps-header copy-inner
+qci 5 non-gbr traffic-policing interval 100 max-packet-delay 100 max-error-rate 6 uplink user-datagram 
+dscp-marking 0x1a encaps-header copy-inner downlink user-datagram dscp-marking 0x1a encaps-header copy-inner
+qci 6 non-gbr traffic-policing interval 100 max-packet-delay 300 max-error-rate 6 uplink user-datagram 
+dscp-marking 0x1a encaps-header copy-inner downlink user-datagram dscp-marking 0x1a encaps-header copy-inner
+qci 7 non-gbr traffic-policing interval 100 max-packet-delay 100 max-error-rate 3 uplink user-datagram 
+dscp-marking 0x12 encaps-header copy-inner downlink user-datagram dscp-marking 0x12 encaps-header copy-inner
+qci 8 non-gbr traffic-policing interval 100 max-packet-delay 300 max-error-rate 6 uplink user-datagram 
+dscp-marking 0x0a encaps-header copy-inner downlink user-datagram dscp-marking 0x0a encaps-header copy-inner
+qci 9 non-gbr traffic-policing interval 100 max-packet-delay 300 max-error-rate 6 uplink user-datagram 
+dscp-marking 0x00 encaps-header copy-inner downlink user-datagram dscp-marking 0x00 encaps-header copy-inner
+	</div><br>
+	</section>
+	
+	<section>
+        <header>
+            <h1>MME AMBR and MBR</h1>
+        </header>
+	<p>On MME you will also want to setup QCI, ARP, and APN-AMBR via CLI below in <font color="blue">blue</font>. Note we set 
+	QCI to 9 (DSCP=BE), UL/DL rate to 8Mb/s and ARP to 1 which translates into little resource 
+	reservation and almost no chance of being pre-empted. For UE-AMBR, we set this value via 
+	call-control-profile as shown in <font color="green">green</font> below. Note both AMBRs have their cap set to minimum 
+	or HSS or local CLI, whichever is lower.  This type of limit might be good for MVNO or Roaming 
+	types of subscriber scenarios.</p>
+	
+	<div>
+mme-service MME1-SVC
+      associate subscriber-map SM1
+
+lte-policy
+  subscriber-map SM1
+    precedence 1024 match-criteria all operator-policy-name OP1
+
+operator-policy name OP1
+  associate call-control-profile CCP1
+  apn default-apn-profile AP1
+
+<font color="blue">apn-profile AP1
+  qos prefer-as-cap both-hss-and-local minimum
+  qos dedicated-bearer mbr max-ul 4000000 max-dl 4000000
+  qos default-bearer qci 9
+  qos default-bearer arp 1 preemption-capability may vulnerability not-preemptable
+  qos apn-ambr max-ul 8000000 max-dl 8000000</font>
+ 	
+Options:
+preemption-capability
+  may                  - Bearer may be preempted
+  shall-not            - Bearer shall not be preempted
+
+vulnerability
+  not-preemptable      - Bearer is not preemptable
+  preemptable          - Bearer is preemptable
+
+qos prefer-as-cap
+  both-hss-and-local   - Configure policy for HSS and/or Local values
+  local-when-subscription-not-available - reject if subscription values exceed local
+  minimum              - use minimum of hss and local, and use local only if hss does not send it
+  subscription-exceed-reject - reject if subscription values exceed local
+  local                - Prefer local configuration for qos capping
+ 
+<font color="green">call-control-profile CCP1
+  qos ue-ambr max-ul 8000000 max-dl 8000000
+  qos ue-ambr prefer-as-cap both-hss-and-local minimum</font>
+ 
+Options:
+ both-hss-and-local
+  local-when-subscription-not-available - Use local values only when subscription is not available
+  minimum - Prefer minimum of HSS and local value
+  subscription-exceed-reject - when subscription values exceed local values, send reject
+</div><br>
+	</section>
+	
+	<section>
+        <header>
+            <h1>Conclusion and Thoughts</h1>
+        </header>
+	<p>The QOS in EPC is still evolving and there is still work to be done on UE initiated 
+	bearers as well as handover support for QOS with MS-Only and MS/NW based Bearer Resource 
+	Control. We highly recommend you spend some time reading 23.401 section 4.7 along with 
+	the whitepapers links at the top from Amit Ghadge.
+    <br><br>
+	RAN Design for LTE Advanced:</p>
+	<img src="./3.png" alt="LTE Advanced">
+	</section>
+	
+</article>
+
+<footer>
+    <p>&copy; 2015 Eric Lajoie. All rights reserved.</p>
+</footer>
+
+    </body>
+</html>

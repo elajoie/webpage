@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="eric, lajoie, eric lajoie, HP, helion, OpenStack, Community Edition">
+    <meta name="description" content="Eric Lajoie's HOWTO for HP Helion OpenStack CE">
+    <meta name="author" content="Eric Lajoie">
+    <title>Eric's Tech Notes - HP Helion CE</title>
+    <link rel="stylesheet" href="styles.css" type="text/css">
+</head>
+<body>
+    <header>
+        <hgroup>
+            <h1>Eric's Tech Notes</h1>
+            <h2>HOWTO guides to sometimes complicated tasks</h2>
+        </hgroup>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="./">Home</a></li>
+            <li><a href="./aboutme.html">About Me</a></li>
+            <li><a href="./contact.html">Contact Me</a></li>
+        </ul>
+    </nav>
+
+<article>
+    <header>
+        <time datetime="2014-12-01" pubdate><span>Dec</span> 1</time>
+        <h1><a href="#" title="Link to this post" rel="bookmark">Helion OpenStack Community Edition (Virtual)</a></h1>
+    </header>
+    <p>This guide is based on Helion Community Edition 1.4 on Ubuntu 13.10 and the install process follows <a href="http://docs.hpcloud.com/helion/community/install-overview/">this guide</a>.</p>
+    <section>
+        <header>
+            <h1>Introduction</h1>
+        </header>
+        <p>We will start with a clean server install which meets the minimum hardware requirements as listed <a href=".http://docs.hpcloud.com/helion/community/hwsw-requirements/#virtual-jumplink-span">here</a>.
+	If you run into any issues during the install you can post questions <a href="https://ask.openstack.org/en/questions/scope:all/sort:activity-desc/tags:hphelion/page:1/">here</a>. The exact install process we will follow is <a href="http://docs.hpcloud.com/helion/community/install-virtual/">here</a>.
+	</p>
+	<p>Before you begin to install, you may wish to verify the MD5 hash of your software. Below are the MD5 hash values for this guide:</p>
+	<table>
+	<tr>
+	    <th>Software Name</th>
+	    <th>MD5 Hash</th>
+	</tr>
+	<tr>
+	    <td>Ubuntu 13.10</td>
+	    <td><a href="http://releases.ubuntu.com/13.10/MD5SUMS">linked here</a></td>
+	</tr>
+	<tr>
+	    <td>HP Helion CE 1.4</td>
+	    <td>e397c2795359d959376e9f3b2fe276e4</td>
+	</tr>
+	</table>
+	</p>
+    </section>
+    <section>
+        <header>
+            <h1>Host Ubuntu Setup</h1>
+        </header>
+	<p>In this section we will setup Ubuntu before we start installing Helion. First we create our SSH private and public keys then we follow with next section on seed creation.
+	<div><code>ssh-keygen -t rsa</code> (just press enter three times)</div>
+	<br>
+	<img src="./helion/1.png" alt="ssh key generation"><br>
+	Log in as root user and install the required prerequisites. 
+	<div>apt-get install -y libvirt-bin openvswitch-switch python-libvirt<br>apt-get install -y qemu-system-x86 qemu-kvm openssh-server</div><br>
+	Reload once done.
+	<div>init 6</div><br>
+	</p>
+    </section>
+    <section>
+        <header>
+            <h1>Seed Setup</h1>
+        </header>
+        <p>In this section we will stage the Helion CE software and extract to our root folder. Once we have the code staged we will proceed to run the script
+	which sets up the seed VM. This is used to act as bare metal provisioning for undercloud and overcloud.</p><br>
+
+	Staged the code via SCP or other transfer method to the root folder on the host.
+	Once its staged, you want to extract with the following command.
+	<div>tar -zxvf Helion_Openstack_Community_V1.4.tar.gz</div><br>
+	<div style="background-color:yellow">All steps further on will need to be repeated after each physical machine reboot.</div><br>
+	Run setup script:
+	<div>HP_VM_MODE=y bash -x ./tripleo/tripleo-incubator/scripts/hp_ced_host_manager.sh --create seed</div><br>
+	When its finished sucessfully, you will want to verify VMs are created as shown below.
+	<div>virsh list --all</div><br>
+        <img src="./helion/2.png" alt="VMs"><br>
+        Also make sure you understand the interfaces created and how they are bound together.<br>
+	<div>brctl show</div><br>
+	<div>ovs-vsctl show</div><br>
+        <img src="./helion/3.png" alt="Interfaces"><br>
+	</p>
+    </section>
+    
+    <section>
+        <header>
+            <h1>Underclound & Overcloud Setup</h1>
+        </header>
+        <p>The section we will be on the seed VM running one last script which will deploy the undercloud onto one of the baremetal-VMs shown earlier with the virsh list command.</p><br>
+	Log into the seed VM.
+	<div>ssh 192.0.2.1</div><br>
+	Set the envirnment variables for NTP and DVR.
+	<div>export OVERCLOUD_NTP_SERVER=192.0.2.1
+export UNDERCLOUD_NTP_SERVER=192.0.2.1
+export OVERCLOUD_NEUTRON_DVR=False</div><br>
+	Run setup script:
+	<div>bash -x /root/tripleo/tripleo-incubator/scripts/hp_ced_installer.sh</div><br>
+	</p>
+    </section>
+Here are a couple follow-up lists if you want to verify the setup or dive into the Helion Development Platform.
+<li><a href="http://docs.hpcloud.com/helion/community/verify/">http://docs.hpcloud.com/helion/community/verify/</a></li>
+<li><a href="http://docs.hpcloud.com/helion/devplatform/">http://docs.hpcloud.com/helion/devplatform/</a></li>
+</article>
+<footer>
+    <p>&copy; 2015 Eric Lajoie. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
+

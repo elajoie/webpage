@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eric&#39;s Tech Blog</title>
+    <title>{{ title }}</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -87,7 +87,7 @@
 
 <header class="banner-background">
     <div class="container">
-        <h1>Eric&#39;s Tech Blog</h1>
+        <h1>{{ title }}</h1>
         <nav>
             <ul>
                 <li><a href="#">Home</a></li>
@@ -98,23 +98,11 @@
     </div>
 </header>
 
-<main class="container">
-    <article>
-        <h2>Blog Post Title 1</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum.</p>
-        <a href="#">Read More...</a>
-    </article>
-<p><article>
-<h2>Blog Post Title 2</h2>
-<p>Cras vehicula ultricies erat non pulvinar. Praesent blandit accumsan risus quis convallis.</p>
-<a href="#">Read More...</a>
-</article></p>
-</main>
-
+{{ content | safe }}
 
 <footer class="banner-background">
     <div class="container">
-        <p>&copy; 2025 Eric&#39;s Tech Blog. All rights reserved.</p>
+        <p>&copy; 2025 {{ title }}. All rights reserved.</p>
     </div>
 </footer>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>Eric&#39;s Tech Blog</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -26,7 +26,7 @@
         }
 
         .banner-background {
-            background-image: url('repeating-banner.jpg'); /* Replace with your image path */
+            background-image: url('/repeating-banner.jpg'); /* Replace with your image path */
             background-repeat: repeat-x; /* Repeats the image horizontally */
             padding: 2rem 0;
         }
@@ -81,28 +81,41 @@
             margin: 0;
             color: #ffffff;
         }
+        
+        code {
+        #background-color: #f4f4f4;
+        padding: 5px;
+        border-radius: 3px;
+        font-family: monospace;
+        }
     </style>
 </head>
 <body>
 
 <header class="banner-background">
     <div class="container">
-        <h1>{{ title }}</h1>
+        <h1>Eric&#39;s Tech Blog</h1>
         <nav>
             <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about/index.html">About</a></li>
+                <li><a href="/contact/index.html">Contact</a></li>
             </ul>
         </nav>
     </div>
 </header>
 
-{{ content | safe }}
+<main class="container">
+    <article>
+        <h2>SUSE AI on SLES 15 SP6</h2>
+        <p></p>
+    </article>
+</main>
+
 
 <footer class="banner-background">
     <div class="container">
-        <p>&copy; 2025 {{ title }}. All rights reserved.</p>
+        <p>&copy; 2025 Eric&#39;s Tech Blog. All rights reserved.</p>
     </div>
 </footer>
 

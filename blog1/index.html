@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eric&#39;s Tech Blog</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: #333;
+            background-color: #e8f5e9; /* Light green background */
+        }
+        
+        header, footer {
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .header-image {
+            width: 100%;
+            height: auto;
+            display: none; /* Hide the image as we'll use a repeating background */
+        }
+
+        .banner-background {
+            background-image: url('/repeating-banner.jpg'); /* Replace with your image path */
+            background-repeat: repeat-x; /* Repeats the image horizontally */
+            padding: 2rem 0;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+
+        nav ul li {
+            display: inline;
+            margin-right: 20px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+
+        main {
+            padding: 2rem 0;
+        }
+
+        article {
+            background-color: #fff;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #ffffff;
+        }
+        
+        h2 {
+            color: #333;
+        }
+
+        a {
+            color: #388e3c; /* Greenish blue */
+        }
+
+        footer p {
+            margin: 0;
+            color: #ffffff;
+        }
+        
+        code {
+        #background-color: #f4f4f4;
+        padding: 5px;
+        border-radius: 3px;
+        font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<header class="banner-background">
+    <div class="container">
+        <h1>Eric&#39;s Tech Blog</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about/index.html">About</a></li>
+                <li><a href="/contact/index.html">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <article>
+        <h2>3GPP EPC Node Selection</h2>
+        <p>This DNS HOWTO assumes you have Googled the basic setup of your BIND 
+        service and master/slave deployment. We will only focus on the 3GPP aspect 
+        of the zone file and how you can use it with an ASR5000. The 
+        <a href="http://www.3gpp.org/ftp/Specs/html-info/29303.htm" rel="nofollow">
+        3GPP specification 29.303</a> Annex A4.3(S10) Annex 4.11(S11 and S5), 
+        <a href="http://www.3gpp.org/ftp/Specs/html-info/23003.htm" rel="nofollow">
+        23.003</a>, <a href="http://www.ietf.org/rfc/rfc2915.txt" rel="nofollow">
+        RFC 2915</a>, and <a href="http://www.ietf.org/rfc/rfc3958.txt" rel="nofollow">
+        RFC 3958(2.2.3)</a> are the main references used in this HOWTO.</p>
+<p><h2>Basic DNS Syntax</h2>
+<p>	Below we show the basic header of a zone file and what each element is and how to use it.</p>
+In the beginning you will see an <code>$ORIGIN</code> <code>epc.mnc111.mcc222.3gppnetwork.org.</code>
+value. Every record in the zone file that does not end with a dot will automatically inherit the
+<code>$ORIGIN</code> value. For example the record <code>foobar</code> does not contain a trailing dot so the BIND
+service would read it as <code>foobar.epc.mnc111.mcc222.3gppnetwork.org</code>. On the other hand if the
+record was <code>foobar.</code>, BIND would read this as <code>foobar</code> and nothing else.
+<code>$ORIGIN epc.mnc111.mcc222.3gppnetwork.org.</code></p>
+<p>Now the next item in the top of your zone file will be the TTL field. The TTL is sent to the DNS
+client of the ASR5000 to let it know when the data expires and it need to do a new DNS query. Please
+note this TTL value can be overwritten locally on the ASR5000 via the TTL command in the DNS client
+configuration section.
+<code>$TTL    1800</code></p>
+<p>For the <a href="http://www.zytrax.com/books/dns/ch8/soa.html" rel="nofollow">Start of Authority(SOA)</a>,
+you can refer to the zone file snippet used for EPC below. Note that the email in dot form root is
+just the root user for the system and will likely be different for your deployment.
+<pre><code>@       IN      SOA     ns      root (
+1       ; Serial
+3600    ; Refresh
+30      ; Retry
+3600    ; Expire
+600 )   ; Negative Cache TTL
+</code></pre></p>
+<p><a href="http://en.wikipedia.org/wiki/NAPTR_record" rel="nofollow">Name Authority Pointer (NAPTR)</a> for
+us will only use two flag types (a &amp; s) which is also called S-NAPTR or Straightforward-NAPTR. In S-NAPTR
+you will see many service types which are all defined in 23.003 section 19.4.3 &quot;Service and Protocol service
+names for 3GPP&quot;. The first number in the S-NAPTR RR after the word NAPTR is Order and the second number is
+Preference. Also note the existence of application service of &quot;x-3gpp-sgw&quot; &amp; &quot;x-3gpp-pgw&quot; with their
+corresponding application protocol of &quot;x-s5-gtp&quot;. These service represents if its a SGW or PGW while the
+S5 protocol means both node types support GTP based S5 and not PMIP. Note that since we have NAPTR with
+flag type &quot;s&quot; for our TAI resolution and gw-selection is co-location, we will not use order or preference
+in selection criteria unless we have multiple best matches in which case lowest order value will trump.
+<pre><code>;TAI S-NAPTR
+;TA which exist within the north or south
+;North:
+tac-lb03.tac-hb00.tac IN NAPTR 100  100  &quot;s&quot; &quot;x-3gpp-sgw:x-s5-gtp&quot; &quot;&quot; _sgw._north
+tac-lb04.tac-hb00.tac IN NAPTR 100  100  &quot;s&quot; &quot;x-3gpp-sgw:x-s5-gtp&quot; &quot;&quot; _sgw._north
+;South:
+tac-lb01.tac-hb00.tac IN NAPTR 100  100  &quot;s&quot; &quot;x-3gpp-sgw:x-s5-gtp&quot; &quot;&quot; _sgw._south
+tac-lb02.tac-hb00.tac IN NAPTR 100  100  &quot;s&quot; &quot;x-3gpp-sgw:x-s5-gtp&quot; &quot;&quot; _sgw._south
+;APN NAPTR
+;APN's which exist only on one PGW use NAPTR &quot;a&quot; flag
+;North:
+apnName3.apn   IN NAPTR 100  100  &quot;a&quot; &quot;x-3gpp-pgw:x-s5-gtp&quot; &quot;&quot; topon.s5-pgw.nodeName3.site3.north
+apnName4.apn   IN NAPTR 100  100  &quot;a&quot; &quot;x-3gpp-pgw:x-s5-gtp&quot; &quot;&quot; topon.s5-pgw.nodeName4.site4.north
+;South:
+apnName1.apn   IN NAPTR 100  100  &quot;a&quot; &quot;x-3gpp-pgw:x-s5-gtp&quot; &quot;&quot; topon.s5-pgw.nodeName1.site1.south
+apnName2.apn   IN NAPTR 100  100  &quot;a&quot; &quot;x-3gpp-pgw:x-s5-gtp&quot; &quot;&quot; topon.s5-pgw.nodeName2.site2.south
+;Common APN on all PGW's use NAPTR &quot;s&quot; flag apnName.apn  IN NAPTR 100  100  &quot;s&quot; &quot;x-3gpp-pgw:x-s5-gtp&quot; &quot;&quot; _nodes._pgw
+</code></pre></p>
+<p><a href="http://en.wikipedia.org/wiki/SRV_record" rel="nofollow">Service(SRV)</a> records
+give you the ability to load balance per weight and set destination port numbers in SRV record. The
+first number in the SVR record after the word SRV is Priority and the second number is Weight
+followed by port number. Note that when we have multiple best matches with equal order values in
+the NAPTR results then we can use priority to tie break (lower better) and weight in the SRV
+record to balance traffic if priorities were equal(more to add once R14 is released).
+<pre><code>
+;SRV Records for SGW
+;North
+_sgw._north 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName1.site1.north
+_sgw._north 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName2.site2.north
+_sgw._north 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName3.site3.south
+_sgw._north 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName4.site4.south
+;South
+_sgw._south 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName3.site3.south
+_sgw._south 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName4.site4.south
+_sgw._south 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName1.site1.north
+_sgw._south 1800 IN SRV 20 100 2123 topon.s5-sgw.nodeName2.site2.north
+;SRV Records for PGW
+;PGW, Equal weight for common apn's. TTL 1800. Port gtp-c v2 is 2123
+_nodes._pgw 1800 IN SRV 20 100 2123 topon.s5-pgw.nodeName1.site1.north
+_nodes._pgw 1800 IN SRV 20 100 2123 topon.s5-pgw.nodeName2.site2.north
+_nodes._pgw 1800 IN SRV 20 100 2123 topon.s5-pgw.nodeName3.site3.south
+_nodes._pgw 1800 IN SRV 20 100 2123 topon.s5-pgw.nodeName4.site4.south
+</code></pre>
+A or AAAA are the final record pointing to the IP address of node.
+<code>;A records for PGW
+;S5 address of PGWs that support GTP based S5 interfaces.
+topon.s5-pgw.nodeName1.site1.north IN A  1.1.1.1
+topon.s5-pgw.nodeName2.site2.north IN A  2.2.2.2
+topon.s5-pgw.nodeName3.site3.south IN A  3.3.3.3
+topon.s5-pgw.nodeName4.site4.south IN A  4.4.4.4
+;A records for SGW
+;S11 addresses of SGWs that support GTP based S5 interfaces.
+topon.s5-sgw.nodeName1.site1.north IN A  5.5.5.5
+topon.s5-sgw.nodeName2.site2.north IN A  6.6.6.6
+topon.s5-sgw.nodeName3.site3.south IN A  7.7.7.7
+topon.s5-sgw.nodeName4.site4.south IN A  8.8.8.8
+</code></p>
+<p><h2>Basic MME Configuration (co-location)</h2>
+<p>	Below you will find basic MME configuration to support node selection plus
+static selection in the event DNS/BIND is down or unreachable. The top element
+in the structure is the <code>lte-policy/subscriber-map</code> which calls the
+<code>operator-policy</code>. Then the <code>operator-policy</code> calls the
+<code>call-control-profile</code> and <code>apn-profile</code>. The <code>call-control-profile</code>
+below is used to say &quot;use dns look up for both SGW and PGW selection&quot; and
+if DNS is down use static list <code>TMD1</code>. The static tai management DB
+is also used to define TA Lists that are sent to UE to inform it about the
+TA is can move between before it needs to perform a TAU. The important part
+in the <code>call-control-profile</code> for node selection is the use of
+<code>gw-selection</code> <code>co-location</code> which tells the MME to use best
+match of SGW and PGW and longest conical name match. In the example above
+we would match conical names up to the nodeName# portion of the FQDN.
+The <code>apn-profile</code> is used for static PGW assignment for when DNS is unreachable.</p>
+Please note that if the DNS client gets multiple answers with equal order or
+preference and we have <code>round-robin-answers</code> enabled in the client,
+we will round robin across the results on a per service/PCS2 basis. This may
+result in what looks broken functionality as the first results may get used
+always until all session managers have done so and move on to next result.
+<pre><code>
+context local
+operator-policy name OP1
+associate call-control-profile CCP1
+apn default-apn-profile AP1
+#exit
+call-control-profile CCP1
+dns-sgw context GP-GN
+dns-pgw context GP-GN
+gw-selection co-location
+associate tai-mgmt-db TMD1
+#exit
+apn-profile AP1
+pgw-address 1.1.1.1
+pgw-address 2.2.2.2
+pgw-address 3.3.3.3
+pgw-address 4.4.4.4
+#exit
+context S1
+mme-service MME-SVC
+associate subscriber-map SM1
+exit
+context GP-GN
+ip name-servers 9.9.9.9 10.10.10.10
+dns-client DNS
+bind address 11.11.11.11
+round-robin-answers
+#exit
+GlobalConfig
+lte-policy
+subscriber-map SM1
+precedence 1 match-criteria all operator-policy-name OP1
+exit
+tai-mgmt-db TMD1
+tai-mgmt-obj TMO1
+tai mcc 111 mnc  222 tac 1
+sgw-address 5.5.5.5 s5-s8-protocol gtp weight 100
+sgw-address 6.6.6.6 s5-s8-protocol gtp weight 100
+sgw-address 7.7.7.7 s5-s8-protocol gtp weight 100
+sgw-address 8.8.8.8 s5-s8-protocol gtp weight 100
+#exit
+tai-mgmt-obj TMO2
+tai mcc 111 mnc  222 tac 2
+sgw-address 5.5.5.5 s5-s8-protocol gtp weight 100
+sgw-address 6.6.6.6 s5-s8-protocol gtp weight 100
+sgw-address 7.7.7.7 s5-s8-protocol gtp weight 100
+sgw-address 8.8.8.8 s5-s8-protocol gtp weight 100
+#exit
+tai-mgmt-obj TMO4
+tai mcc 111 mnc  222 tac 3
+sgw-address 5.5.5.5 s5-s8-protocol gtp weight 100
+sgw-address 6.6.6.6 s5-s8-protocol gtp weight 100
+sgw-address 7.7.7.7 s5-s8-protocol gtp weight 100
+sgw-address 8.8.8.8 s5-s8-protocol gtp weight 100
+#exit
+tai-mgmt-obj TMO4
+tai mcc 111 mnc  222 tac 4
+sgw-address 5.5.5.5 s5-s8-protocol gtp weight 100
+sgw-address 6.6.6.6 s5-s8-protocol gtp weight 100
+sgw-address 7.7.7.7 s5-s8-protocol gtp weight 100
+sgw-address 8.8.8.8 s5-s8-protocol gtp weight 100
+#exit
+</code></pre></p>
+<p><h2>Gateway Selection Logic</h2>
+<p>Below we detail the co-location gateway selection criteria available in IOS-M R12.2.</p>
+gw-selection co-location
+<b>co-location</b>
+co-location as the determining factor for gateway selection. What this means is the MME
+will take all records received from DNS and pair together all SGW and PGW with exact conical
+name match. If failures happen in the pairs, they will be black listed on a per subscriber
+basis during a attach procedure. Once all the pairs are exhausted from failures during a
+single attach procedure, the MME will start using all left records as random pairs until
+success is reached or you run into the four fall back limit mentioned below.
+P/SGW retries configured in egtp service
+P/SGW fall back happens four times per subscriber to the selected nodes equaling
+total of 5 nodes pair attempts before reject (we only have four co-located pairs in
+the example).
+If order and priority are all equal and round robin is configured, the MME will
+use a list for each session manager per PSC card as follows 1,2,3,4,5 to each card
+for its first sub. Then 2,3,4,5,1 for all PSC cards for it next subscriber and so
+one as will round robins through the results.	PGW selection uses Order/Priority
+on PGW only when more than one PGW is available and only one SGW is available.</p>
+<p><table>
+<h2>NAPTR Mapping</h2>
+<thead align=left>
+<tr>
+<th>Record Type</th><th>Flag</th><th>Metric Type</th><th>Is it Used?</th>
+</tr>
+</thead>
+<tbody>	
+<tr>
+<td>NAPTR</td><td>s</td><td>Order</td><td>Yes, only when DNS returns two or more SGW RRs FQDN length as a tie breaker (lower is better)</td>
+</tr>
+<tr>
+<td>NAPTR</td><td>s</td><td>Preference</td><td>Used for load balancing in R14 (65535 - value sent by DNS)</td>
+</tr>
+<tr>
+<td>NAPTR</td><td>a</td><td>Order</td><td>Yes, only when DNS returns two or more SGW RRs FQDN length as a tie breaker (lower is better)</td>
+</tr>
+<tr>
+<td>NAPTR</td><td>a</td><td>Preference</td><td>Used for load balancing in R14 (65535 - value sent by DNS)</td>
+</tr>
+<tr>
+<td>SRV</td><td>N/A</td><td>Priority</td><td>Yes, only when DNS returns two or more SGW RRs FQDN length as a tie breaker (lower is better)</td>
+</tr>
+<tr>
+<td>SRV</td><td>N/A</td><td>Weight</td><td>Yes, When multiple equal length longest matches are returned, this value dictates what percent each will
+be load balanced. For example if you have two results with priority of 20 and 80 then the 20 result will get 20% of bearer requests and the other will
+bet 80% per session manager(only in R14.0)</td>
+</tr>
+</tbody>
+</table></p>
+<p><h2>Service Types</h2>
+<p>Below we have a table showing the supported app-service types and app-protocol types.</p>
+<table>
+<thead align=left>
+<tr>
+<th>Description</th><th>IETF RFC 3958 section 6.5 'app-service' name</th><th>IETF RFC 3958 section 6.5 'app-protocol' name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PGW and interface types supported by the PGW</td><td>x-3gpp-pgw</td><td>x-s5-gtpx-s5-pmipx-s8-gtp
+x-s8-pmipx-s2a-pmipx-s2a-mipv4x-s2b-pmipx-s2cdsmipx-gnx-gp</td>
+</tr>
+<tr>
+<td>SGW and interface types supported by the SGW</td><td>x-3gpp-sgw</td><td>x-s5-gtpx-s5-pmip
+x-s8-gtpx-s8-pmipx-s11x-s12x-s4x-s1-ux-s2a-pmipx-s2b-pmip</td>
+</tr>
+<tr>
+<td>GGSN</td><td>x-3gpp-ggsn</td><td>x-gnx-gp</td>
+</tr>
+<tr>
+<td>SGSN</td><td>x-3gpp-sgsn</td><td>x-gnx-gpx-s4x-s3x-s16</td>
+</tr>
+<tr>
+<td>MME and interface types supported by the MME</td><td>x-3gpp-mme</td><td>x-s10
+x-s11x-s3x-s6ax-s1-mmex-gnx-gp</td>
+</tr>
+</tbody>
+</table></p>
+<p><h2>Additional Information</h2>
+From 3GPP Specification 23.401:
+<ul>
+<li>5.5.1.1.2 X2-based handover without Serving GW relocation
+&quot;The MME determines that the Serving GW can continue to serve the UE&quot; (this means translates 100% to fact
+that SGW can handle UEs target TA)</li>
+<li>5.5.1.1.3 X2-based handover with Serving GW relocation	
+&quot;the MME decides that the Serving GW is to be relocated&quot; (this means translates 100% to fact that SGW cannot handle UEs target TA)</li>
+</ul>
+</article></p>
+</main>
+
+
+<footer class="banner-background">
+    <div class="container">
+        <p>&copy; 2025 Eric&#39;s Tech Blog. All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+</html>
